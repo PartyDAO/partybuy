@@ -1,0 +1,51 @@
+{
+  "name": "partybuy",
+  "version": "1.0.0",
+  "description": "PartyBuy contracts",
+  "main": "",
+  "scripts": {
+    "test": "npm run compile && hardhat test",
+    "deploy": "npm run compile && node ./deploy/index.js && npm run verify",
+    "verify": "hardhat --network rinkeby verify",
+    "compile": "hardhat compile",
+    "prettier": "prettier --write './contracts' ./test",
+    "lint": "solhint 'contracts/*.sol' && solhint 'contracts/**/*.sol' && eslint test/"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/PartyDAO/partybuy"
+  },
+  "keywords": [
+    "solidity",
+    "ethereum",
+    "smart-contracts"
+  ],
+  "author": "Anna Carroll",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/PartyDAO/partybuy/issues"
+  },
+  "homepage": "https://github.com/PartyDAO/partybuy#readme",
+  "dependencies": {
+    "@openzeppelin/contracts": "4.1.0",
+    "@openzeppelin/contracts-upgradeable": "4.1.0",
+    "@openzeppelin/contracts-upgradeable2": "npm:@openzeppelin/contracts-upgradeable@^3.4.0",
+    "@openzeppelin/contracts2": "npm:@openzeppelin/contracts@^3.2.0",
+    "@openzeppelin/hardhat-upgrades": "^1.9.0",
+    "dotenv": "^10.0.0"
+  },
+  "devDependencies": {
+    "@nomiclabs/hardhat-etherscan": "^2.1.2",
+    "@nomiclabs/hardhat-ethers": "^2.0.1",
+    "@nomiclabs/hardhat-waffle": "^2.0.1",
+    "hardhat": "^2.0.8",
+    "hardhat-gas-reporter": "^1.0.4",
+    "ethers": "^5.0.29",
+    "chai": "^4.3.0",
+    "eslint": "^7.20.0",
+    "ethereum-waffle": "^3.2.2",
+    "prettier": "2.2.1",
+    "prettier-plugin-solidity": "^1.0.0-beta.5",
+    "solhint-plugin-prettier": "^0.0.5"
+  }
+}
