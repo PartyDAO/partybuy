@@ -4,9 +4,6 @@ require('@nomiclabs/hardhat-etherscan');
 require('@openzeppelin/hardhat-upgrades');
 const dotenv = require('dotenv');
 dotenv.config();
-const buy = require("./deploy/verify");
-
-task("verify", "Verifies the PartyBuy contracts").setAction(buy.verify);
 
 /**
  * @type import('hardhat/config').HardhatUserConfig
