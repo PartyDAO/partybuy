@@ -37,12 +37,12 @@ async function deployPartyBuyFactory() {
 
     // load config.json
     const config = JSON.parse(fs.readFileSync(`./deploy/configs/${CHAIN_NAME}.json`));
-    const {partyDAOMultisig, fractionalArtERC721VaultFactory, weth, allowedContracts, logicNftContract, logicTokenId} = config;
-    if (!(partyDAOMultisig && fractionalArtERC721VaultFactory && weth && allowedContracts && logicNftContract && logicTokenId)) {
+    const {partyDAOMultisig, fractionalArtERC721VaultFactory, weth, allowedContracts} = config;
+    if (!(partyDAOMultisig && fractionalArtERC721VaultFactory && weth && allowedContracts)) {
         throw new Error("Must populate config with partyDAOMultisig, fractionalArtERC721VaultFactory, weth, logicNftContract, logicTokenId");
     }
 
-    // get the deployed Zora MarketWrapper
+    // get the deployed contracts
     const {directory, filename, contractAddresses} = getDeployedAddresses(CHAIN_NAME);
     // setup deployer wallet
     const deployer = getDeployer(RPC_ENDPOINT, DEPLOYER_PRIVATE_KEY);
@@ -58,9 +58,7 @@ async function deployPartyBuyFactory() {
         partyDAOMultisig,
         fractionalArtERC721VaultFactory,
         weth,
-        allowList.address,
-        logicNftContract,
-        logicTokenId,
+        allowList.address
     ]);
     console.log(`Deployed PartyBuy Factory to ${CHAIN_NAME}: `, factory.address);
 

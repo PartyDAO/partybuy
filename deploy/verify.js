@@ -17,11 +17,9 @@ async function verify() {
     const {
         partyDAOMultisig,
         fractionalArtERC721VaultFactory,
-        weth,
-        logicNftContract,
-        logicTokenId,
+        weth
     } = config;
-    if (!(partyDAOMultisig && fractionalArtERC721VaultFactory && weth && logicNftContract && logicTokenId)) {
+    if (!(partyDAOMultisig && fractionalArtERC721VaultFactory && weth)) {
         throw new Error("Must populate config with partyDAOMultisig, fractionalArtERC721VaultFactory, weth, foundationMarket, zoraAuctionHouse, logicNftContract, logicTokenId, logicZoraAuctionId");
     }
 
@@ -39,9 +37,7 @@ async function verify() {
         partyDAOMultisig,
         fractionalArtERC721VaultFactory,
         weth,
-        allowList,
-        logicNftContract,
-        logicTokenId,
+        allowList
     ]);
 
     console.log(`Verify PartyBuy Logic`);
