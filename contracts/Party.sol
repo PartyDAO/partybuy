@@ -47,8 +47,8 @@ contract Party is ReentrancyGuardUpgradeable, ERC721HolderUpgradeable {
     // ============ Enums ============
 
     // State Transitions:
-    //   (1) ACTIVE on deploy
-    //   (2) WON if the Party has won the token
+    //   (0) ACTIVE on deploy
+    //   (1) WON if the Party has won the token
     //   (2) LOST if the Party is over & did not win the token
     enum PartyStatus {ACTIVE, WON, LOST}
 
