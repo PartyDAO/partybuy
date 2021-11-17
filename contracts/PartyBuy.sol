@@ -118,6 +118,8 @@ contract PartyBuy is Party {
         // check that value is not more than
         // the maximum amount the party can spend while paying ETH fee
         require(_value <= getMaximumSpend(), "PartyBuy::buy: insuffucient funds to buy token plus fee");
+        // require that the NFT is NOT owned by the Party
+        require(_getOwner() != address(this), "PartyBuy::buy: own token before call");
         // execute the calldata on the target contract
         (bool _success, bytes memory _returnData) = address(_targetContract).call{value: _value}(_calldata);
         // require that the external call succeeded
@@ -150,7 +152,6 @@ contract PartyBuy is Party {
             "PartyBuy::expire: party not active"
         );
         require(expiresAt <= block.timestamp, "PartyBuy::expire: party has not timed out");
-        require(_getOwner() != address(this), "PartyBuy::expire: contract owns token");
         // set partyStatus to LOST
         partyStatus = PartyStatus.LOST;
         // emit Expired event
