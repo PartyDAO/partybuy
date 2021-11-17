@@ -6,5 +6,5 @@ pragma solidity 0.8.5;
  * @author Anna Carroll
  */
 interface IAllowList {
-    function allowed(address _addr) external returns (bool _bool);
+    function allowed(address _addr) external view returns (bool _bool);
 }
