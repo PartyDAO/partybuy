@@ -1,10 +1,7 @@
 const {ethers} = require("hardhat");
-const {BigNumber} = ethers;
 const fs = require("fs");
 const dotenv = require('dotenv');
 const {getDeployedAddresses, writeDeployedAddresses} = require("./helpers");
-
-const GAS_PRICE = "70000000000";
 
 deployPartyBuyFactory()
     .then(() => {
@@ -91,9 +88,6 @@ async function deployPartyBuyFactory() {
 
 async function deploy(wallet, name, args = []) {
     const Implementation = await ethers.getContractFactory(name, wallet);
-    const contract = await Implementation.deploy(...args, {
-        gasPrice: BigNumber.from(GAS_PRICE),
-        gasLimit: 5000000
-    });
+    const contract = await Implementation.deploy(...args);
     return contract.deployed();
 }
