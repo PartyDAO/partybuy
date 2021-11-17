@@ -50,9 +50,7 @@ async function deployTestContractSetup(
     partyDAOMultisig.address,
     tokenVaultFactory.address,
     weth.address,
-    allowList.address,
-    nftContract.address,
-    tokenId,
+    allowList.address
   ]);
 
   // Deploy PartyBid proxy
@@ -80,6 +78,7 @@ async function deployTestContractSetup(
     partyDAOMultisig,
     weth,
     allowList,
+    factory
   };
 }
 

@@ -13,7 +13,7 @@ describe('Deploy', async () => {
       const splitBasisPoints = 0;
       const maxPrice = 10;
       const tokenId = 95;
-      let partyBuy, partyDAOMultisig, signer, artist;
+      let partyBuy, partyDAOMultisig, factory, nftContract, signer, artist;
 
       before(async () => {
         // GET RANDOM SIGNER & ARTIST
@@ -32,6 +32,43 @@ describe('Deploy', async () => {
 
         partyBuy = contracts.partyBuy;
         partyDAOMultisig = contracts.partyDAOMultisig;
+        factory = contracts.factory;
+        nftContract = contracts.nftContract;
+      });
+
+      it('Cannot initialize logic contract', async () => {
+        // get PartyBuy logic contract
+        const logic = await factory.logic();
+        const PartyBuy = await ethers.getContractFactory('PartyBuy');
+        const partyBuyLogic = new ethers.Contract(
+          logic,
+          PartyBuy.interface,
+          signer,
+        );
+        // calling initialize from external signer should not be possible
+        expect(partyBuyLogic.initialize(
+          nftContract.address,
+          tokenId,
+          eth(maxPrice),
+          100,
+          [splitRecipient, splitBasisPoints],
+          ["0x0000000000000000000000000000000000000000", 0],
+          "PartyBuy Logic",
+          "LOGIC"
+        )).to.be.revertedWith("Party::__Party_init: only factory can init");
+      });
+
+      it('Cannot re-initialize Party contract', async () => {
+        expect(partyBuy.initialize(
+          nftContract.address,
+          tokenId,
+          eth(maxPrice),
+          100,
+          [splitRecipient, splitBasisPoints],
+          ["0x0000000000000000000000000000000000000000", 0],
+          "PartyBuy",
+          "PARTYYYY"
+        )).to.be.revertedWith("Initializable: contract is already initialized");
       });
 
       it('Party Status is Active', async () => {
