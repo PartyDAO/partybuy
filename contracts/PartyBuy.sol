@@ -25,8 +25,8 @@ contract PartyBuy is Party {
 
     // ============ Internal Constants ============
 
-    // PartyBuy version 1
-    uint16 public constant VERSION = 1;
+    // PartyBuy version 2
+    uint16 public constant VERSION = 2;
 
     // ============ Immutables ============
 
@@ -44,8 +44,8 @@ contract PartyBuy is Party {
 
     // ============ Events ============
 
-    // emitted when the token is successfully bought
-    event Bought(address triggeredBy, address targetAddress, uint256 ethSpent, uint256 ethFeePaid, uint256 totalContributed);
+    // emitted when a token is successfully bought
+    event Bought(uint256 tokenId, address triggeredBy, address targetAddress, uint256 ethSpent, uint256 ethFeePaid, uint256 totalContributed);
 
     // emitted if the Party fails to buy the token before expiresAt
     // and someone expires the Party so folks can reclaim ETH
@@ -66,7 +66,6 @@ contract PartyBuy is Party {
 
     function initialize(
         address _nftContract,
-        uint256 _tokenId,
         uint256 _maxPrice,
         uint256 _secondsToTimeout,
         Structs.AddressAndAmount calldata _split,
@@ -77,7 +76,7 @@ contract PartyBuy is Party {
         // validate maxPrice
         require(_maxPrice > 0, "PartyBuy::initialize: must set price higher than 0");
         // initialize & validate shared Party variables
-        __Party_init(_nftContract, _tokenId, _split, _tokenGate, _name, _symbol);
+        __Party_init(_nftContract, _split, _tokenGate, _name, _symbol);
         // set PartyBuy-specific state variables
         expiresAt = block.timestamp + _secondsToTimeout;
         maxPrice = _maxPrice;
@@ -104,7 +103,7 @@ contract PartyBuy is Party {
      * @notice Buy the token by calling targetContract with calldata supplying value
      * @dev Emits a Bought event upon success; reverts otherwise. callable by anyone
      */
-    function buy(uint256 _value, address _targetContract, bytes calldata _calldata) external nonReentrant {
+    function buy(uint256 _tokenId, uint256 _value, address _targetContract, bytes calldata _calldata) external nonReentrant {
         require(
             partyStatus == PartyStatus.ACTIVE,
             "PartyBuy::buy: party not active"
@@ -118,6 +117,8 @@ contract PartyBuy is Party {
         // check that value is not more than
         // the maximum amount the party can spend while paying ETH fee
         require(_value <= getMaximumSpend(), "PartyBuy::buy: insuffucient funds to buy token plus fee");
+        // set tokenId variable before _getOwner
+        tokenId = _tokenId;
         // require that the NFT is NOT owned by the Party
         require(_getOwner() != address(this), "PartyBuy::buy: own token before call");
         // execute the calldata on the target contract
@@ -134,7 +135,7 @@ contract PartyBuy is Party {
         // send Token fees to PartyDAO & split proceeds to split recipient
         uint256 _ethFee = _closeSuccessfulParty(_value);
         // emit Bought event
-        emit Bought(msg.sender, _targetContract, _value, _ethFee, totalContributedToParty);
+        emit Bought(_tokenId, msg.sender, _targetContract, _value, _ethFee, totalContributedToParty);
     }
 
     // ======== External: Fail =========
