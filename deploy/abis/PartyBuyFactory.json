@@ -20,16 +20,6 @@
         "internalType": "address",
         "name": "_allowList",
         "type": "address"
-      },
-      {
-        "internalType": "address",
-        "name": "_logicNftContract",
-        "type": "address"
-      },
-      {
-        "internalType": "uint256",
-        "name": "_logicTokenId",
-        "type": "uint256"
       }
     ],
     "stateMutability": "nonpayable",
@@ -65,14 +55,14 @@
       {
         "indexed": false,
         "internalType": "uint256",
-        "name": "maxPrice",
+        "name": "secondsToTimeout",
         "type": "uint256"
       },
       {
         "indexed": false,
-        "internalType": "uint256",
-        "name": "secondsToTimeout",
-        "type": "uint256"
+        "internalType": "address[]",
+        "name": "deciders",
+        "type": "address[]"
       },
       {
         "indexed": false,
@@ -173,13 +163,13 @@
       },
       {
         "internalType": "uint256",
-        "name": "_maxPrice",
+        "name": "_secondsToTimeout",
         "type": "uint256"
       },
       {
-        "internalType": "uint256",
-        "name": "_secondsToTimeout",
-        "type": "uint256"
+        "internalType": "address[]",
+        "name": "_deciders",
+        "type": "address[]"
       },
       {
         "components": [
