@@ -11,7 +11,6 @@ const { PARTY_STATUS, FOURTY_EIGHT_HOURS_IN_SECONDS } = require('./helpers/const
 describe('Deploy', async () => {
       const splitRecipient = "0x0000000000000000000000000000000000000000";
       const splitBasisPoints = 0;
-      const maxPrice = 10;
       const tokenId = 95;
       let partyBuy, partyDAOMultisig, factory, nftContract, signer, artist;
 
@@ -23,8 +22,8 @@ describe('Deploy', async () => {
         const contracts = await deployTestContractSetup(
           provider,
           artist,
-          eth(maxPrice),
           FOURTY_EIGHT_HOURS_IN_SECONDS,
+          [signer.address],
           splitRecipient,
           splitBasisPoints,
           tokenId,
@@ -49,8 +48,8 @@ describe('Deploy', async () => {
         expect(partyBuyLogic.initialize(
           nftContract.address,
           tokenId,
-          eth(maxPrice),
           100,
+          ["0x0000000000000000000000000000000000000000"],
           [splitRecipient, splitBasisPoints],
           ["0x0000000000000000000000000000000000000000", 0],
           "PartyBuy Logic",
@@ -62,8 +61,8 @@ describe('Deploy', async () => {
         expect(partyBuy.initialize(
           nftContract.address,
           tokenId,
-          eth(maxPrice),
           100,
+          ["0x0000000000000000000000000000000000000000"],
           [splitRecipient, splitBasisPoints],
           ["0x0000000000000000000000000000000000000000", 0],
           "PartyBuy",
@@ -91,9 +90,9 @@ describe('Deploy', async () => {
         expect(totalContributedToParty).to.equal(eth(0));
       });
 
-      it('MaxPrice is set', async () => {
-        const max = await partyBuy.maxPrice();
-        expect(max).to.equal(eth(maxPrice));
+      it('Deciders are set', async () => {
+        const isDecider = await partyBuy.isDecider(signer.address);
+        expect(isDecider).to.be.true;
       });
 
       it('Total Contributed is zero for random account', async () => {

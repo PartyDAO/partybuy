@@ -43,8 +43,8 @@ describe('TokenGating', async () => {
         const contracts = await deployTestContractSetup(
           provider,
           signer,
-          eth(maxPrice),
           FOURTY_EIGHT_HOURS_IN_SECONDS,
+          [signer.address],
           splitRecipient,
           splitBasisPoints,
           tokenId,

@@ -22,7 +22,6 @@ describe('Expire', async () => {
     describe(`Case ${i}`, async () => {
       // get test case information
       const {
-        maxPrice,
         splitRecipient,
         splitBasisPoints,
         contributions,
@@ -43,8 +42,8 @@ describe('Expire', async () => {
         const contracts = await deployTestContractSetup(
           provider,
           signer,
-          eth(maxPrice),
           FOURTY_EIGHT_HOURS_IN_SECONDS,
+          [signer.address],
           splitRecipient,
           splitBasisPoints,
           tokenId,

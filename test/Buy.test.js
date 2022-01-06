@@ -10,7 +10,7 @@ const {
   eth,
   weiToEth,
   getTotalContributed,
-  contribute,
+  contribute, sendFromSigner,
 } = require('./helpers/utils');
 const { getTokenVault, deploy, deployTestContractSetup } = require('./helpers/deploy');
 const {  } = require('./helpers/utils');
@@ -29,7 +29,6 @@ describe('Buy', async () => {
     describe(`Case ${i}`, async () => {
       // get test case information
       const {
-        maxPrice,
         splitRecipient,
         splitBasisPoints,
         contributions,
@@ -43,7 +42,8 @@ describe('Buy', async () => {
         multisigBalanceBefore,
         tokenVault,
         sellerContract,
-        signer;
+        signer,
+        notDeciderSigner;
       const signers = provider.getWallets();
       const tokenId = 95;
       const totalContributed = new BigNumber(getTotalContributed(contributions));
@@ -62,14 +62,14 @@ describe('Buy', async () => {
       const expectedTotalSpent = amtSpent.plus(ethFee);
 
       before(async () => {
-        [signer] = provider.getWallets();
+        [signer, notDeciderSigner] = provider.getWallets();
 
         // DEPLOY NFT, MARKET, AND PARTY BID CONTRACTS
         const contracts = await deployTestContractSetup(
           provider,
           signer,
-          eth(maxPrice),
           FOURTY_EIGHT_HOURS_IN_SECONDS,
+          [signer.address],
           splitRecipient,
           splitBasisPoints,
           tokenId,
@@ -123,6 +123,15 @@ describe('Buy', async () => {
         await expect(partyBuy.buy(eth(amountSpent), sellerContract.address, data)).to.be.revertedWith("PartyBuy::buy: targetContract not on AllowList");
         // set allow list to true
         await allowList.setAllowed(sellerContract.address, true);
+      });
+
+      it('Fails if caller is not a decider', async () => {
+        // encode data to buy NFT
+        const sellData = encodeData(sellerContract, 'sell', [eth(amountSpent), tokenId, nftContract.address]);
+        // encode data to call buy function
+        const data = encodeData(partyBuy, 'buy', [eth(amountSpent), sellerContract.address, sellData]);
+        // buy NFT
+        await expect(sendFromSigner(notDeciderSigner, partyBuy.address, data)).to.be.revertedWith("PartyBuy::buy: caller not a decider");
       });
 
       it('Fails if external call reverts', async () => {

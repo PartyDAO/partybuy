@@ -11,7 +11,6 @@ const { FOURTY_EIGHT_HOURS_IN_SECONDS } = require('../helpers/constants');
 describe('NonReceivable', async () => {
   const splitRecipient = "0x0000000000000000000000000000000000000000";
   const splitBasisPoints = 0;
-  const maxPrice = 10;
   const tokenId = 95;
   let partyBuy,
     nftContract,
@@ -27,8 +26,8 @@ describe('NonReceivable', async () => {
     const contracts = await deployTestContractSetup(
       provider,
       signer,
-      eth(maxPrice),
       FOURTY_EIGHT_HOURS_IN_SECONDS,
+      [signer.address],
       splitRecipient,
       splitBasisPoints,
       tokenId,

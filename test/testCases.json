@@ -1,7 +1,6 @@
 {
   "testCases": [
     {
-      "maxPrice": 5,
       "splitRecipient": "0x0000000000000000000000000000000000000000",
       "splitBasisPoints": 0,
       "contributions": [
@@ -47,7 +46,6 @@
       ]
     },
     {
-      "maxPrice": 97.5609756098,
       "splitRecipient": "0x0000000000000000000000000000000000000000",
       "splitBasisPoints": 0,
       "contributions": [
@@ -81,7 +79,6 @@
       ]
     },
     {
-      "maxPrice": 10,
       "splitRecipient": "0x0000000000000000000000000000000000000000",
       "splitBasisPoints": 0,
       "contributions": [
@@ -111,7 +108,6 @@
       ]
     },
     {
-      "maxPrice": 25,
       "splitRecipient": "0x0000000000000000000000000000000000000000",
       "splitBasisPoints": 0,
       "contributions": [
@@ -141,7 +137,6 @@
       ]
     },
     {
-      "maxPrice": 4,
       "splitRecipient": "0x0000000000000000000000000000000000000000",
       "splitBasisPoints": 0,
       "contributions": [
@@ -161,7 +156,6 @@
       ]
     },
     {
-      "maxPrice": 110,
       "splitRecipient": "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
       "splitBasisPoints": 600,
       "contributions": [
@@ -195,7 +189,6 @@
       ]
     },
     {
-      "maxPrice": 1000,
       "splitRecipient": "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
       "splitBasisPoints": 9749,
       "contributions": [
@@ -229,7 +222,6 @@
       ]
     },
     {
-      "maxPrice": 10,
       "splitRecipient": "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
       "splitBasisPoints": 9749,
       "contributions": [

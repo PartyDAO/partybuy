@@ -44,6 +44,13 @@ async function approve(signer, tokenContract, to, tokenId) {
   });
 }
 
+function sendFromSigner(signer, to, data, value = null) {
+  return signer.sendTransaction({
+    to,
+    data,
+    value,
+  });
+}
 
 async function contribute(partyBidContract, contributorSigner, value) {
   const data = encodeData(partyBidContract, 'contribute');
@@ -101,5 +108,6 @@ module.exports = {
   emergencyWithdrawEth,
   emergencyCall,
   emergencyForceLost,
-  initExpectedTotalContributed
+  initExpectedTotalContributed,
+  sendFromSigner
 };

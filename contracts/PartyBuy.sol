@@ -36,11 +36,9 @@ contract PartyBuy is Party {
 
     // the timestamp at which the Party is no longer active
     uint256 public expiresAt;
-    // the maximum price that the party is willing to
-    // spend on the token
-    // NOTE: the party can accept *UP TO* 102.5% of maxPrice in total,
-    // and will not accept more contributions after this
-    uint256 public maxPrice;
+    // decider => true if this address is a decider
+    mapping(address => bool) public isDecider;
+
 
     // ============ Events ============
 
@@ -67,20 +65,21 @@ contract PartyBuy is Party {
     function initialize(
         address _nftContract,
         uint256 _tokenId,
-        uint256 _maxPrice,
         uint256 _secondsToTimeout,
+        address[] calldata _deciders,
         Structs.AddressAndAmount calldata _split,
         Structs.AddressAndAmount calldata _tokenGate,
         string memory _name,
         string memory _symbol
     ) external initializer {
-        // validate maxPrice
-        require(_maxPrice > 0, "PartyBuy::initialize: must set price higher than 0");
         // initialize & validate shared Party variables
         __Party_init(_nftContract, _tokenId, _split, _tokenGate, _name, _symbol);
         // set PartyBuy-specific state variables
         expiresAt = block.timestamp + _secondsToTimeout;
-        maxPrice = _maxPrice;
+        // set deciders list
+        for (uint256 i = 0; i < _deciders.length; i++) {
+            isDecider[_deciders[i]] = true;
+        }
     }
 
     // ======== External: Contribute =========
@@ -91,10 +90,7 @@ contract PartyBuy is Party {
      * @dev Emits a Contributed event upon success; callable by anyone
      */
     function contribute() external payable nonReentrant {
-        // require that the new total contributed is not greater than
-        // the maximum amount the Party is willing to spend
-        require(totalContributedToParty + msg.value <= getMaximumContributions(), "PartyBuy::contribute: cannot contribute more than max");
-        // continue with shared _contribute flow
+        // shared _contribute flow
         _contribute();
     }
 
@@ -109,12 +105,12 @@ contract PartyBuy is Party {
             partyStatus == PartyStatus.ACTIVE,
             "PartyBuy::buy: party not active"
         );
+        // ensure the caller is a decider
+        require(isDecider[msg.sender], "PartyBuy::buy: caller not a decider");
         // ensure the target contract is on allow list
         require(allowList.allowed(_targetContract), "PartyBuy::buy: targetContract not on AllowList");
         // check that value is not zero (else, token will be burned in TokenVault)
         require(_value > 0, "PartyBuy::buy: can't spend zero");
-        // check that value is not more than the maximum price set at deploy time
-        require(_value <= maxPrice, "PartyBuy::buy: can't spend over max price");
         // check that value is not more than
         // the maximum amount the party can spend while paying ETH fee
         require(_value <= getMaximumSpend(), "PartyBuy::buy: insuffucient funds to buy token plus fee");
@@ -156,16 +152,5 @@ contract PartyBuy is Party {
         partyStatus = PartyStatus.LOST;
         // emit Expired event
         emit Expired(msg.sender);
-    }
-
-    // ============ Internal ============
-
-    /**
-    * @notice Get the maximum amount that can be contributed to the Party
-    * @return _maxContributions the maximum amount that can be contributed to the party
-    */
-    function getMaximumContributions() public view returns (uint256 _maxContributions) {
-        uint256 _price = maxPrice;
-        _maxContributions = _price + _getEthFee(_price);
     }
 }
