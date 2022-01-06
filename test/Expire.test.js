@@ -22,7 +22,6 @@ describe('Expire', async () => {
     describe(`Case ${i}`, async () => {
       // get test case information
       const {
-        maxPrice,
         splitRecipient,
         splitBasisPoints,
         contributions,
@@ -43,8 +42,8 @@ describe('Expire', async () => {
         const contracts = await deployTestContractSetup(
           provider,
           signer,
-          eth(maxPrice),
           FOURTY_EIGHT_HOURS_IN_SECONDS,
+          [signer.address],
           splitRecipient,
           splitBasisPoints,
           tokenId,
@@ -101,7 +100,7 @@ describe('Expire', async () => {
         // encode data to buy NFT
         const data = encodeData(sellerContract, 'sell', [eth(amountSpent), tokenId, nftContract.address]);
         // buy NFT
-        await expect(partyBuy.buy(eth(amountSpent), sellerContract.address, data)).to.be.revertedWith("PartyBuy::buy: party not active");
+        await expect(partyBuy.buy(tokenId, eth(amountSpent), sellerContract.address, data)).to.be.revertedWith("PartyBuy::buy: party not active");
       });
 
       it(`Doesn't allow Expire after initial Expire`, async () => {

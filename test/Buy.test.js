@@ -10,7 +10,7 @@ const {
   eth,
   weiToEth,
   getTotalContributed,
-  contribute,
+  contribute, sendFromSigner,
 } = require('./helpers/utils');
 const { getTokenVault, deploy, deployTestContractSetup } = require('./helpers/deploy');
 const {  } = require('./helpers/utils');
@@ -29,7 +29,6 @@ describe('Buy', async () => {
     describe(`Case ${i}`, async () => {
       // get test case information
       const {
-        maxPrice,
         splitRecipient,
         splitBasisPoints,
         contributions,
@@ -43,7 +42,8 @@ describe('Buy', async () => {
         multisigBalanceBefore,
         tokenVault,
         sellerContract,
-        signer;
+        signer,
+        notDeciderSigner;
       const signers = provider.getWallets();
       const tokenId = 95;
       const totalContributed = new BigNumber(getTotalContributed(contributions));
@@ -62,14 +62,14 @@ describe('Buy', async () => {
       const expectedTotalSpent = amtSpent.plus(ethFee);
 
       before(async () => {
-        [signer] = provider.getWallets();
+        [signer, notDeciderSigner] = provider.getWallets();
 
         // DEPLOY NFT, MARKET, AND PARTY BID CONTRACTS
         const contracts = await deployTestContractSetup(
           provider,
           signer,
-          eth(maxPrice),
           FOURTY_EIGHT_HOURS_IN_SECONDS,
+          [signer.address],
           splitRecipient,
           splitBasisPoints,
           tokenId,
@@ -113,37 +113,46 @@ describe('Buy', async () => {
         // encode data to buy NFT
         const data = encodeData(sellerContract, 'sell', [eth(0), tokenId, nftContract.address]);
         // buy NFT
-        await expect(partyBuy.buy(eth(0), sellerContract.address, data)).to.be.reverted;
+        await expect(partyBuy.buy(tokenId, eth(0), sellerContract.address, data)).to.be.reverted;
       });
 
       it('Fails if AllowList is not set', async () => {
         // encode data to buy NFT
         const data = encodeData(sellerContract, 'sell', [eth(amountSpent), tokenId, nftContract.address]);
         // buy NFT
-        await expect(partyBuy.buy(eth(amountSpent), sellerContract.address, data)).to.be.revertedWith("PartyBuy::buy: targetContract not on AllowList");
+        await expect(partyBuy.buy(tokenId, eth(amountSpent), sellerContract.address, data)).to.be.revertedWith("PartyBuy::buy: targetContract not on AllowList");
         // set allow list to true
         await allowList.setAllowed(sellerContract.address, true);
+      });
+
+      it('Fails if caller is not a decider', async () => {
+        // encode data to buy NFT
+        const sellData = encodeData(sellerContract, 'sell', [eth(amountSpent), tokenId, nftContract.address]);
+        // encode data to call buy function
+        const data = encodeData(partyBuy, 'buy', [tokenId, eth(amountSpent), sellerContract.address, sellData]);
+        // buy NFT
+        await expect(sendFromSigner(notDeciderSigner, partyBuy.address, data)).to.be.revertedWith("PartyBuy::buy: caller not a decider");
       });
 
       it('Fails if external call reverts', async () => {
         // encode data to buy NFT
         const data = encodeData(sellerContract, 'revertSell', [eth(amountSpent), tokenId, nftContract.address]);
         // buy NFT
-        await expect(partyBuy.buy(eth(amountSpent), sellerContract.address, data)).to.be.reverted;
+        await expect(partyBuy.buy(tokenId, eth(amountSpent), sellerContract.address, data)).to.be.reverted;
       });
 
       it('Fails if token is not in contract', async () => {
         // encode data to buy NFT
         const data = encodeData(sellerContract, 'fakeSell', [eth(amountSpent), tokenId, nftContract.address]);
         // buy NFT
-        await expect(partyBuy.buy(eth(amountSpent), sellerContract.address, data)).to.be.revertedWith("PartyBuy::buy: failed to buy token");
+        await expect(partyBuy.buy(tokenId, eth(amountSpent), sellerContract.address, data)).to.be.revertedWith("PartyBuy::buy: failed to buy token");
       });
 
       it('Buys the NFT successfully', async () => {
         // encode data to buy NFT
         const data = encodeData(sellerContract, 'sell', [eth(amountSpent), tokenId, nftContract.address]);
         // buy NFT
-        await expect(partyBuy.buy(eth(amountSpent), sellerContract.address, data)).to.emit(partyBuy, 'Bought');
+        await expect(partyBuy.buy(tokenId, eth(amountSpent), sellerContract.address, data)).to.emit(partyBuy, 'Bought');
         // query token vault
         tokenVault = await getTokenVault(partyBuy, signers[0]);
       });
@@ -156,7 +165,7 @@ describe('Buy', async () => {
         // encode data to buy NFT
         const data = encodeData(sellerContract, 'sell', [eth(amountSpent), tokenId, nftContract.address]);
         // buy NFT
-        await expect(partyBuy.buy(eth(amountSpent), sellerContract.address, data)).to.be.revertedWith("PartyBuy::buy: party not active");
+        await expect(partyBuy.buy(tokenId, eth(amountSpent), sellerContract.address, data)).to.be.revertedWith("PartyBuy::buy: party not active");
       });
 
       it(`Doesn't allow Expire after Buy`, async () => {

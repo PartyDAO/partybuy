@@ -18,7 +18,7 @@ describe('Contribute', async () => {
         describe(`Case ${i}`, async () => {
           // get test case information
           let partyBuy, signer, artist;
-          const { splitRecipient, splitBasisPoints, contributions, maxPrice } = testCase;
+          const { splitRecipient, splitBasisPoints, contributions } = testCase;
           const tokenId = 95;
           const signers = provider.getWallets();
           let expectedTotalContributedToParty = 0;
@@ -34,8 +34,8 @@ describe('Contribute', async () => {
             const contracts = await deployTestContractSetup(
               provider,
               artist,
-              eth(maxPrice),
               FOURTY_EIGHT_HOURS_IN_SECONDS,
+              [signer.address],
               splitRecipient,
               splitBasisPoints,
               tokenId,

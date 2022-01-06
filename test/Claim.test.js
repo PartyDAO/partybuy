@@ -17,7 +17,6 @@ describe('Claim', async () => {
     describe(`Case ${i}`, async () => {
       // get test case information
       const {
-        maxPrice,
         splitRecipient,
         splitBasisPoints,
         contributions,
@@ -43,8 +42,8 @@ describe('Claim', async () => {
         const contracts = await deployTestContractSetup(
           provider,
           signer,
-          eth(maxPrice),
           FOURTY_EIGHT_HOURS_IN_SECONDS,
+          [signer.address],
           splitRecipient,
           splitBasisPoints,
           tokenId,
@@ -78,7 +77,7 @@ describe('Claim', async () => {
           // encode data to buy NFT
           const data = encodeData(sellerContract, 'sell', [eth(amountSpent), tokenId, nftContract.address]);
           // buy NFT
-          await expect(partyBuy.buy(eth(amountSpent), sellerContract.address, data)).to.emit(partyBuy, 'Bought');
+          await expect(partyBuy.buy(tokenId, eth(amountSpent), sellerContract.address, data)).to.emit(partyBuy, 'Bought');
           // query token vault
           tokenVault = await getTokenVault(partyBuy, signers[0]);
         });

@@ -13,8 +13,8 @@ async function getTokenVault(party, signer) {
 async function deployTestContractSetup(
   provider,
   artistSigner,
-  maxPrice,
   secondsToTimeout,
+  deciders,
   splitRecipient,
   splitBasisPoints,
   tokenId,
@@ -56,9 +56,8 @@ async function deployTestContractSetup(
   // Deploy PartyBid proxy
   await factory.startParty(
     nftContract.address,
-    tokenId,
-    maxPrice,
     secondsToTimeout,
+    deciders,
     [splitRecipient, splitBasisPoints],
     [gatedToken, gatedTokenAmount],
     'Parrrrti',
