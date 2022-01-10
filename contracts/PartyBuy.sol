@@ -16,7 +16,6 @@ pragma solidity 0.8.5;
 import {Party} from "./Party.sol";
 import {Structs} from "./Structs.sol";
 import {IAllowList} from "./IAllowList.sol";
-import "hardhat/console.sol";
 
 contract PartyBuy is Party {
     // partyStatus Transitions:
