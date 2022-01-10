@@ -16,6 +16,7 @@ pragma solidity 0.8.5;
 import {Party} from "./Party.sol";
 import {Structs} from "./Structs.sol";
 import {IAllowList} from "./IAllowList.sol";
+import "hardhat/console.sol";
 
 contract PartyBuy is Party {
     // partyStatus Transitions:
@@ -36,6 +37,13 @@ contract PartyBuy is Party {
 
     // the timestamp at which the Party is no longer active
     uint256 public expiresAt;
+    // the maximum price that the party is willing to
+    // spend on the token
+    // This is not used for collection buys and should be initialized
+    // to zero at deploy time to denote that there is no max price.
+    // NOTE: the party can accept *UP TO* 102.5% of maxPrice in total,
+    // and will not accept more contributions after this.
+    uint256 public maxPrice;
     // decider => true if this address is a decider
     mapping(address => bool) public isDecider;
 
@@ -64,6 +72,7 @@ contract PartyBuy is Party {
 
     function initialize(
         address _nftContract,
+        uint256 _maxPrice,
         uint256 _secondsToTimeout,
         address[] calldata _deciders,
         Structs.AddressAndAmount calldata _split,
@@ -75,6 +84,8 @@ contract PartyBuy is Party {
         __Party_init(_nftContract, _split, _tokenGate, _name, _symbol);
         // set PartyBuy-specific state variables
         expiresAt = block.timestamp + _secondsToTimeout;
+        maxPrice = _maxPrice;
+        require(_maxPrice + _getEthFee(_maxPrice) >= _maxPrice, "PartyBuy::initialize: Max price can overflow");
         // set deciders list
         for (uint256 i = 0; i < _deciders.length; i++) {
             isDecider[_deciders[i]] = true;
@@ -89,6 +100,10 @@ contract PartyBuy is Party {
      * @dev Emits a Contributed event upon success; callable by anyone
      */
     function contribute() external payable nonReentrant {
+        // require that the new total contributed is not greater than
+        // the maximum amount the Party is willing to spend
+        require(totalContributedToParty + msg.value <= getMaximumContributions(), "PartyBuy::contribute: cannot contribute more than max");
+        // continue with shared _contribute flow
         // shared _contribute flow
         _contribute();
     }
@@ -110,6 +125,8 @@ contract PartyBuy is Party {
         require(allowList.allowed(_targetContract), "PartyBuy::buy: targetContract not on AllowList");
         // check that value is not zero (else, token will be burned in TokenVault)
         require(_value > 0, "PartyBuy::buy: can't spend zero");
+        // check that value is not more than the maximum price set at deploy time
+        require(maxPrice == 0 || _value <= maxPrice, "PartyBuy::buy: can't spend over max price");
         // check that value is not more than
         // the maximum amount the party can spend while paying ETH fee
         require(_value <= getMaximumSpend(), "PartyBuy::buy: insuffucient funds to buy token plus fee");
@@ -153,5 +170,19 @@ contract PartyBuy is Party {
         partyStatus = PartyStatus.LOST;
         // emit Expired event
         emit Expired(msg.sender);
+    }
+
+    // ============ Internal ============
+
+    /**
+    * @notice Get the maximum amount that can be contributed to the Party
+    * @return _maxContributions the maximum amount that can be contributed to the party
+    */
+    function getMaximumContributions() public view returns (uint256 _maxContributions) {
+        uint256 _price = maxPrice;
+        if (_price == 0) {
+            return 2**256 - 1; // max-int
+        }
+        _maxContributions = _price + _getEthFee(_price);
     }
 }

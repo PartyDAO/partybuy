@@ -56,6 +56,7 @@ async function deployTestContractSetup(
   // Deploy PartyBid proxy
   await factory.startParty(
     nftContract.address,
+    0,
     secondsToTimeout,
     deciders,
     [splitRecipient, splitBasisPoints],
