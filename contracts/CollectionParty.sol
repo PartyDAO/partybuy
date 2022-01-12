@@ -88,6 +88,7 @@ contract CollectionParty is Party {
         // attempt to calculate maximum contributions to ensure this value won't overflow later
         getMaximumContributions();
         // set deciders list
+        require(_deciders.length > 0, "PartyBuy::initialize: set at least one decider");
         for (uint256 i = 0; i < _deciders.length; i++) {
             isDecider[_deciders[i]] = true;
         }
