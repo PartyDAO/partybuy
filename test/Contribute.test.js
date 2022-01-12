@@ -17,7 +17,7 @@ describe('Contribute', async () => {
       testCases.map((testCase, i) => {
         describe(`Case ${i}`, async () => {
           // get test case information
-          let partyBuy, signer, artist;
+          let party, signer, artist;
           const { splitRecipient, splitBasisPoints, contributions } = testCase;
           const tokenId = 95;
           const signers = provider.getWallets();
@@ -41,11 +41,11 @@ describe('Contribute', async () => {
               tokenId,
             );
 
-            partyBuy = contracts.partyBuy;
+            party = contracts.party;
           });
 
           it('Does not accept a 0 contribution', async () => {
-            await expect(contribute(partyBuy, signers[0], eth(0))).to.be.revertedWith("Party::contribute: must contribute more than 0");
+            await expect(contribute(party, signers[0], eth(0))).to.be.revertedWith("Party::contribute: must contribute more than 0");
           });
 
           // submit each contribution & check test conditions
@@ -54,7 +54,7 @@ describe('Contribute', async () => {
             const signer = signers[signerIndex];
 
             it('Starts with the correct contribution amount', async () => {
-              const totalContributed = await partyBuy.totalContributed(
+              const totalContributed = await party.totalContributed(
                 signer.address,
               );
               expect(totalContributed).to.equal(
@@ -63,15 +63,15 @@ describe('Contribute', async () => {
             });
 
             it('Starts with correct *total* contribution amount', async () => {
-              const totalContributed = await partyBuy.totalContributedToParty();
+              const totalContributed = await party.totalContributedToParty();
               expect(totalContributed).to.equal(
                 eth(expectedTotalContributedToParty),
               );
             });
 
             it('Accepts the contribution', async () => {
-              await expect(contribute(partyBuy, signer, eth(amount))).to.emit(
-                partyBuy,
+              await expect(contribute(party, signer, eth(amount))).to.emit(
+                party,
                 'Contributed',
               );
               // add to local expected variables
@@ -80,7 +80,7 @@ describe('Contribute', async () => {
             });
 
             it('Records the contribution amount', async () => {
-              const totalContributed = await partyBuy.totalContributed(
+              const totalContributed = await party.totalContributed(
                 signer.address,
               );
               expect(totalContributed).to.equal(
@@ -89,14 +89,14 @@ describe('Contribute', async () => {
             });
 
             it('Records the *total* contribution amount', async () => {
-              const totalContributed = await partyBuy.totalContributedToParty();
+              const totalContributed = await party.totalContributedToParty();
               expect(totalContributed).to.equal(
                 eth(expectedTotalContributedToParty),
               );
             });
 
             it('PartyBid ETH balance is total contributed to party', async () => {
-              const balance = await provider.getBalance(partyBuy.address);
+              const balance = await provider.getBalance(party.address);
               expect(balance).to.equal(eth(expectedTotalContributedToParty));
             });
           }

@@ -2,17 +2,17 @@
 pragma solidity 0.8.5;
 
 import {NonReceivableInitializedProxy} from "./NonReceivableInitializedProxy.sol";
-import {PartyBuy} from "./PartyBuy.sol";
+import {CollectionParty} from "./CollectionParty.sol";
 import {Structs} from "./Structs.sol";
 
 /**
- * @title PartyBuy Factory
+ * @title CollectionParty Factory
  * @author Anna Carroll
  */
-contract PartyBuyFactory {
+contract CollectionPartyFactory {
     //======== Events ========
 
-    event PartyBuyDeployed(
+    event CollectionPartyDeployed(
         address partyProxy,
         address creator,
         address nftContract,
@@ -51,7 +51,7 @@ contract PartyBuyFactory {
         tokenVaultFactory = _tokenVaultFactory;
         weth = _weth;
         // deploy logic contract
-        PartyBuy _logicContract = new PartyBuy(_partyDAOMultisig, _tokenVaultFactory, _weth, _allowList);
+        CollectionParty _logicContract = new CollectionParty(_partyDAOMultisig, _tokenVaultFactory, _weth, _allowList);
         // store logic contract address
         logic = address(_logicContract);
     }
@@ -67,10 +67,10 @@ contract PartyBuyFactory {
         Structs.AddressAndAmount calldata _tokenGate,
         string memory _name,
         string memory _symbol
-    ) external returns (address partyBuyProxy) {
+    ) external returns (address partyProxy) {
         bytes memory _initializationCalldata =
             abi.encodeWithSelector(
-            PartyBuy.initialize.selector,
+            CollectionParty.initialize.selector,
             _nftContract,
             _maxPrice,
             _secondsToTimeout,
@@ -81,17 +81,17 @@ contract PartyBuyFactory {
             _symbol
         );
 
-        partyBuyProxy = address(
+        partyProxy = address(
             new NonReceivableInitializedProxy(
                 logic,
                 _initializationCalldata
             )
         );
 
-        deployedAt[partyBuyProxy] = block.number;
+        deployedAt[partyProxy] = block.number;
 
-        emit PartyBuyDeployed(
-            partyBuyProxy,
+        emit CollectionPartyDeployed(
+            partyProxy,
             msg.sender,
             _nftContract,
             _maxPrice,

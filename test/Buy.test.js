@@ -35,7 +35,7 @@ describe('Buy', async () => {
         amountSpent,
       } = testCase;
       // instantiate test vars
-      let partyBuy,
+      let party,
         nftContract,
         allowList,
         partyDAOMultisig,
@@ -75,7 +75,7 @@ describe('Buy', async () => {
           tokenId,
         );
 
-        partyBuy = contracts.partyBuy;
+        party = contracts.party;
         partyDAOMultisig = contracts.partyDAOMultisig;
         nftContract = contracts.nftContract;
         allowList = contracts.allowList;
@@ -88,7 +88,7 @@ describe('Buy', async () => {
         for (let contribution of contributions) {
           const { signerIndex, amount } = contribution;
           const signer = signers[signerIndex];
-          await contribute(partyBuy, signer, eth(amount));
+          await contribute(party, signer, eth(amount));
         }
 
         // deploy Seller contract & transfer NFT to Seller
@@ -97,30 +97,30 @@ describe('Buy', async () => {
       });
 
       it('Is ACTIVE before Buy', async () => {
-        const partyStatus = await partyBuy.partyStatus();
+        const partyStatus = await party.partyStatus();
         expect(partyStatus).to.equal(PARTY_STATUS.ACTIVE);
       });
 
       it('Does not allow getClaimAmounts before Buy', async () => {
-        await expect(partyBuy.getClaimAmounts(signers[0].address)).to.be.revertedWith("Party::getClaimAmounts: party still active; amounts undetermined");
+        await expect(party.getClaimAmounts(signers[0].address)).to.be.revertedWith("Party::getClaimAmounts: party still active; amounts undetermined");
       });
 
       it('Does not allow totalEthUsed before Buy', async () => {
-        await expect(partyBuy.totalEthUsed(signers[0].address)).to.be.revertedWith("Party::totalEthUsed: party still active; amounts undetermined");
+        await expect(party.totalEthUsed(signers[0].address)).to.be.revertedWith("Party::totalEthUsed: party still active; amounts undetermined");
       });
 
       it('Fails if value is zero', async () => {
         // encode data to buy NFT
         const data = encodeData(sellerContract, 'sell', [eth(0), tokenId, nftContract.address]);
         // buy NFT
-        await expect(partyBuy.buy(tokenId, eth(0), sellerContract.address, data)).to.be.reverted;
+        await expect(party.buy(tokenId, eth(0), sellerContract.address, data)).to.be.reverted;
       });
 
       it('Fails if AllowList is not set', async () => {
         // encode data to buy NFT
         const data = encodeData(sellerContract, 'sell', [eth(amountSpent), tokenId, nftContract.address]);
         // buy NFT
-        await expect(partyBuy.buy(tokenId, eth(amountSpent), sellerContract.address, data)).to.be.revertedWith("PartyBuy::buy: targetContract not on AllowList");
+        await expect(party.buy(tokenId, eth(amountSpent), sellerContract.address, data)).to.be.revertedWith("PartyBuy::buy: targetContract not on AllowList");
         // set allow list to true
         await allowList.setAllowed(sellerContract.address, true);
       });
@@ -129,59 +129,59 @@ describe('Buy', async () => {
         // encode data to buy NFT
         const sellData = encodeData(sellerContract, 'sell', [eth(amountSpent), tokenId, nftContract.address]);
         // encode data to call buy function
-        const data = encodeData(partyBuy, 'buy', [tokenId, eth(amountSpent), sellerContract.address, sellData]);
+        const data = encodeData(party, 'buy', [tokenId, eth(amountSpent), sellerContract.address, sellData]);
         // buy NFT
-        await expect(sendFromSigner(notDeciderSigner, partyBuy.address, data)).to.be.revertedWith("PartyBuy::buy: caller not a decider");
+        await expect(sendFromSigner(notDeciderSigner, party.address, data)).to.be.revertedWith("PartyBuy::buy: caller not a decider");
       });
 
       it('Fails if external call reverts', async () => {
         // encode data to buy NFT
         const data = encodeData(sellerContract, 'revertSell', [eth(amountSpent), tokenId, nftContract.address]);
         // buy NFT
-        await expect(partyBuy.buy(tokenId, eth(amountSpent), sellerContract.address, data)).to.be.reverted;
+        await expect(party.buy(tokenId, eth(amountSpent), sellerContract.address, data)).to.be.reverted;
       });
 
       it('Fails if token is not in contract', async () => {
         // encode data to buy NFT
         const data = encodeData(sellerContract, 'fakeSell', [eth(amountSpent), tokenId, nftContract.address]);
         // buy NFT
-        await expect(partyBuy.buy(tokenId, eth(amountSpent), sellerContract.address, data)).to.be.revertedWith("PartyBuy::buy: failed to buy token");
+        await expect(party.buy(tokenId, eth(amountSpent), sellerContract.address, data)).to.be.revertedWith("PartyBuy::buy: failed to buy token");
       });
 
       it('Buys the NFT successfully', async () => {
         // encode data to buy NFT
         const data = encodeData(sellerContract, 'sell', [eth(amountSpent), tokenId, nftContract.address]);
         // buy NFT
-        await expect(partyBuy.buy(tokenId, eth(amountSpent), sellerContract.address, data)).to.emit(partyBuy, 'Bought');
+        await expect(party.buy(tokenId, eth(amountSpent), sellerContract.address, data)).to.emit(party, 'Bought');
         // query token vault
-        tokenVault = await getTokenVault(partyBuy, signers[0]);
+        tokenVault = await getTokenVault(party, signers[0]);
       });
 
       it(`Doesn't accept contributions after Buy`, async () => {
-        await expect(contribute(partyBuy, signers[0], eth(0.00001))).to.be.reverted;
+        await expect(contribute(party, signers[0], eth(0.00001))).to.be.reverted;
       });
 
       it(`Doesn't allow Buy after initial Buy`, async () => {
         // encode data to buy NFT
         const data = encodeData(sellerContract, 'sell', [eth(amountSpent), tokenId, nftContract.address]);
         // buy NFT
-        await expect(partyBuy.buy(tokenId, eth(amountSpent), sellerContract.address, data)).to.be.revertedWith("PartyBuy::buy: party not active");
+        await expect(party.buy(tokenId, eth(amountSpent), sellerContract.address, data)).to.be.revertedWith("PartyBuy::buy: party not active");
       });
 
       it(`Doesn't allow Expire after Buy`, async () => {
-        await expect(partyBuy.expire()).to.be.revertedWith("PartyBuy::expire: party not active");
+        await expect(party.expire()).to.be.revertedWith("PartyBuy::expire: party not active");
       });
 
       it('Does allow getClaimAmounts before Expire', async () => {
-        await expect(partyBuy.getClaimAmounts(signers[0].address)).to.not.be.reverted;
+        await expect(party.getClaimAmounts(signers[0].address)).to.not.be.reverted;
       });
 
       it('Does allow totalEthUsed before Expire', async () => {
-        await expect(partyBuy.totalEthUsed(signers[0].address)).to.not.be.reverted;
+        await expect(party.totalEthUsed(signers[0].address)).to.not.be.reverted;
       });
 
       it(`Is WON after Buy`, async () => {
-        const partyStatus = await partyBuy.partyStatus();
+        const partyStatus = await party.partyStatus();
         expect(partyStatus).to.equal(PARTY_STATUS.WON);
       });
 
@@ -196,14 +196,14 @@ describe('Buy', async () => {
       });
 
       it('Has correct totalSpent', async () => {
-        const totalSpent = await partyBuy.totalSpent();
+        const totalSpent = await party.totalSpent();
         expect(weiToEth(totalSpent)).to.equal(expectedTotalSpent.toNumber());
       });
 
       it('Has correct balance of tokens in Party', async () => {
         const expectedPartyBidBalance = expectedTotalSpent.times(TOKEN_SCALE);
         const partyTokenBalance = await tokenVault.balanceOf(
-          partyBuy.address,
+          party.address,
         );
         expect(weiToEth(partyTokenBalance)).to.equal(expectedPartyBidBalance.toNumber());
       });
@@ -235,7 +235,7 @@ describe('Buy', async () => {
 
       it('Has correct balance of ETH in Party', async () => {
         const expectedEthBalance = totalContributed.minus(expectedTotalSpent);
-        const ethBalance = await provider.getBalance(partyBuy.address);
+        const ethBalance = await provider.getBalance(party.address);
         expect(weiToEth(ethBalance)).to.equal(expectedEthBalance.toNumber());
       });
     });

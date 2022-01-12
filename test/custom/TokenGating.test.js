@@ -24,7 +24,7 @@ describe('TokenGating', async () => {
   testCases.filter((testCase, i) => compatibleTestCases.includes(i)).map((testCase, i) => {
     describe(`Case ${i}`, async () => {
       // get test case information
-      let partyBuy, signer, nftContract, sellerContract, gatedERC20, allowList, tokenVault;
+      let party, signer, nftContract, sellerContract, gatedERC20, allowList, tokenVault;
       const { splitRecipient, splitBasisPoints, contributions, maxPrice, amountSpent, claims } = testCase;
       const tokenId = 95;
       const signers = provider.getWallets();
@@ -53,7 +53,7 @@ describe('TokenGating', async () => {
           eth(1)
         );
 
-        partyBuy = contracts.partyBuy;
+        party = contracts.party;
         nftContract = contracts.nftContract;
         allowList = contracts.allowList;
 
@@ -69,7 +69,7 @@ describe('TokenGating', async () => {
         const signer = signers[signerIndex];
 
         it('Starts with the correct contribution amount', async () => {
-          const totalContributed = await partyBuy.totalContributed(
+          const totalContributed = await party.totalContributed(
             signer.address,
           );
           expect(totalContributed).to.equal(
@@ -78,7 +78,7 @@ describe('TokenGating', async () => {
         });
 
         it('Starts with correct *total* contribution amount', async () => {
-          const totalContributed = await partyBuy.totalContributedToParty();
+          const totalContributed = await party.totalContributedToParty();
           expect(totalContributed).to.equal(
             eth(expectedTotalContributedToParty),
           );
@@ -89,7 +89,7 @@ describe('TokenGating', async () => {
           const tokenBalance = await gatedERC20.balanceOf(signer.address);
           await expect(weiToEth(tokenBalance)).to.equal(0);
           // expect contribute to fail
-          await expect(contribute(partyBuy, signer, eth(amount))).to.be.revertedWith("Party::contribute: must hold tokens to contribute");
+          await expect(contribute(party, signer, eth(amount))).to.be.revertedWith("Party::contribute: must hold tokens to contribute");
         });
 
         it('Does not accept contribution from not-enough-token holder', async () => {
@@ -99,7 +99,7 @@ describe('TokenGating', async () => {
             value: eth(0.5),
           });
           // attempt to contribute
-          await expect(contribute(partyBuy, signer, eth(amount))).to.be.revertedWith("Party::contribute: must hold tokens to contribute");
+          await expect(contribute(party, signer, eth(amount))).to.be.revertedWith("Party::contribute: must hold tokens to contribute");
         });
 
         it('Accepts the contribution from sufficient token holders', async () => {
@@ -109,8 +109,8 @@ describe('TokenGating', async () => {
             value: eth(0.5),
           });
 
-          await expect(contribute(partyBuy, signer, eth(amount))).to.emit(
-            partyBuy,
+          await expect(contribute(party, signer, eth(amount))).to.emit(
+            party,
             'Contributed',
           );
           // add to local expected variables
@@ -119,7 +119,7 @@ describe('TokenGating', async () => {
         });
 
         it('Records the contribution amount', async () => {
-          const totalContributed = await partyBuy.totalContributed(
+          const totalContributed = await party.totalContributed(
             signer.address,
           );
           expect(totalContributed).to.equal(
@@ -128,14 +128,14 @@ describe('TokenGating', async () => {
         });
 
         it('Records the *total* contribution amount', async () => {
-          const totalContributed = await partyBuy.totalContributedToParty();
+          const totalContributed = await party.totalContributedToParty();
           expect(totalContributed).to.equal(
             eth(expectedTotalContributedToParty),
           );
         });
 
         it('PartyBid ETH balance is total contributed to party', async () => {
-          const balance = await provider.getBalance(partyBuy.address);
+          const balance = await provider.getBalance(party.address);
           expect(balance).to.equal(eth(expectedTotalContributedToParty));
         });
       }
@@ -149,9 +149,9 @@ describe('TokenGating', async () => {
           // encode data to buy NFT
           const data = encodeData(sellerContract, 'sell', [eth(amountSpent), tokenId, nftContract.address]);
           // buy NFT
-          await expect(partyBuy.buy(tokenId, eth(amountSpent), sellerContract.address, data)).to.emit(partyBuy, 'Bought');
+          await expect(party.buy(tokenId, eth(amountSpent), sellerContract.address, data)).to.emit(party, 'Bought');
           // query token vault
-          tokenVault = await getTokenVault(partyBuy, signers[0]);
+          tokenVault = await getTokenVault(party, signers[0]);
         });
       } else {
         it('Expires after Party is timed out', async () => {
@@ -161,7 +161,7 @@ describe('TokenGating', async () => {
           ]);
           await provider.send('evm_mine');
           // expire party
-          await expect(partyBuy.expire()).to.emit(partyBuy, 'Expired');
+          await expect(party.expire()).to.emit(party, 'Expired');
         });
       }
 
@@ -170,13 +170,13 @@ describe('TokenGating', async () => {
         const { signerIndex, tokens, excessEth, totalContributed } = claim;
         const contributor = signers[signerIndex];
         it('Gives the correct values for getClaimAmounts before claim is called', async () => {
-          const [tokenClaimAmount, ethClaimAmount] = await partyBuy.getClaimAmounts(contributor.address);
+          const [tokenClaimAmount, ethClaimAmount] = await party.getClaimAmounts(contributor.address);
           expect(weiToEth(tokenClaimAmount)).to.equal(tokens);
           expect(weiToEth(ethClaimAmount)).to.equal(excessEth);
         });
 
         it('Gives the correct value for totalEthUsed before claim is called', async () => {
-          const totalEthUsed = await partyBuy.totalEthUsed(contributor.address);
+          const totalEthUsed = await party.totalEthUsed(contributor.address);
           const expectedEthUsed = (new BigNumber(totalContributed)).minus(excessEth);
           expect(weiToEth(totalEthUsed)).to.equal(expectedEthUsed.toNumber());
         });
@@ -184,8 +184,8 @@ describe('TokenGating', async () => {
         it(`Allows Claim, transfers ETH and tokens to contributors after Finalize`, async () => {
           const accounts = [
             {
-              name: 'partyBuy',
-              address: partyBuy.address,
+              name: 'party',
+              address: party.address,
             },
             {
               name: 'contributor',
@@ -199,8 +199,8 @@ describe('TokenGating', async () => {
           expect(before.contributor.tokens.toNumber()).to.equal(0);
 
           // claim succeeds; event is emitted
-          await expect(partyBuy.claim(contributor.address))
-            .to.emit(partyBuy, 'Claimed')
+          await expect(party.claim(contributor.address))
+            .to.emit(party, 'Claimed')
             .withArgs(
               contributor.address,
               eth(totalContributed),
@@ -210,14 +210,14 @@ describe('TokenGating', async () => {
 
           const after = await getBalances(provider, tokenVault, accounts);
 
-          // ETH was transferred from PartyBuy to contributor
-          await expect(after.partyBuy.eth.toNumber()).to.equal(
-            before.partyBuy.eth.minus(excessEth).toNumber()
+          // ETH was transferred from party to contributor
+          await expect(after.party.eth.toNumber()).to.equal(
+            before.party.eth.minus(excessEth).toNumber()
           );
 
           // Tokens were transferred from Party to contributor
-          await expect(after.partyBuy.tokens.toNumber()).to.equal(
-            before.partyBuy.tokens.minus(tokens).toNumber()
+          await expect(after.party.tokens.toNumber()).to.equal(
+            before.party.tokens.minus(tokens).toNumber()
           );
           await expect(after.contributor.tokens.toNumber()).to.equal(
             before.contributor.tokens.plus(tokens).toNumber()
@@ -225,19 +225,19 @@ describe('TokenGating', async () => {
         });
 
         it('Gives the same values for getClaimAmounts after claim is called', async () => {
-          const [tokenClaimAmount, ethClaimAmount] = await partyBuy.getClaimAmounts(contributor.address);
+          const [tokenClaimAmount, ethClaimAmount] = await party.getClaimAmounts(contributor.address);
           expect(weiToEth(tokenClaimAmount)).to.equal(tokens);
           expect(weiToEth(ethClaimAmount)).to.equal(excessEth);
         });
 
         it('Gives the same value for totalEthUsed after claim is called', async () => {
-          const totalEthUsed = await partyBuy.totalEthUsed(contributor.address);
+          const totalEthUsed = await party.totalEthUsed(contributor.address);
           const expectedEthUsed = (new BigNumber(totalContributed)).minus(excessEth);
           expect(weiToEth(totalEthUsed)).to.equal(expectedEthUsed.toNumber());
         });
 
         it(`Does not allow a contributor to double-claim`, async () => {
-          await expect(partyBuy.claim(contributor.address)).to.be.reverted;
+          await expect(party.claim(contributor.address)).to.be.reverted;
         });
       }
     });

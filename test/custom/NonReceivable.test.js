@@ -12,7 +12,7 @@ describe('NonReceivable', async () => {
   const splitRecipient = "0x0000000000000000000000000000000000000000";
   const splitBasisPoints = 0;
   const tokenId = 95;
-  let partyBuy,
+  let party,
     nftContract,
     allowList,
     sellerContract,
@@ -33,7 +33,7 @@ describe('NonReceivable', async () => {
       tokenId,
     );
 
-    partyBuy = contracts.partyBuy;
+    party = contracts.party;
     nftContract = contracts.nftContract;
     allowList = contracts.allowList;
 
@@ -44,20 +44,20 @@ describe('NonReceivable', async () => {
     // set allow list to true
     await allowList.setAllowed(sellerContract.address, true);
 
-    await contribute(partyBuy, signer, eth(10));
+    await contribute(party, signer, eth(10));
   });
 
   it('Does not receive ETH', async () => {
     await expect(signer.sendTransaction({
-      to: partyBuy.address,
+      to: party.address,
       value: eth(1)
     })).to.be.reverted;
   });
 
   it('Does not receive ETH with Data', async () => {
-    const data = encodeData(partyBuy, 'expire');
+    const data = encodeData(party, 'expire');
     await expect(signer.sendTransaction({
-      to: partyBuy.address,
+      to: party.address,
       value: eth(1),
       data
     })).to.be.reverted;
@@ -67,6 +67,6 @@ describe('NonReceivable', async () => {
     // encode data to buy NFT
     const data = encodeData(sellerContract, 'sellAndReenter', [eth(5), tokenId, nftContract.address]);
     // buy NFT
-    await expect(partyBuy.buy(tokenId, eth(5), sellerContract.address, data)).to.be.revertedWith("re-enter failed");
+    await expect(party.buy(tokenId, eth(5), sellerContract.address, data)).to.be.revertedWith("re-enter failed");
   });
 });

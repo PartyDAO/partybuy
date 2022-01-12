@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.5;
 
-import {PartyBuy} from "../PartyBuy.sol";
+import {CollectionParty} from "../CollectionParty.sol";
 import {IERC721Metadata} from "@openzeppelin/contracts/token/ERC721/extensions/IERC721Metadata.sol";
 
 contract Seller {
@@ -15,7 +15,7 @@ contract Seller {
         IERC721Metadata(nftContract).safeTransferFrom(address(this), msg.sender, tokenId);
         (bool _success, bytes memory _returnData) = address(msg.sender).call{value: offer}(
             abi.encodeWithSelector(
-                PartyBuy.buy.selector,
+                CollectionParty.buy.selector,
                 offer,
                 address(this),
                 abi.encodeWithSelector(

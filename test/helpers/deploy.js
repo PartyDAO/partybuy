@@ -46,7 +46,7 @@ async function deployTestContractSetup(
   const allowList = await deploy('AllowList');
 
   // Deploy PartyBid Factory (including PartyBid Logic + Reseller Whitelist)
-  const factory = await deploy('PartyBuyFactory', [
+  const factory = await deploy('CollectionPartyFactory', [
     partyDAOMultisig.address,
     tokenVaultFactory.address,
     weth.address,
@@ -66,7 +66,7 @@ async function deployTestContractSetup(
   );
 
   // Get PartyBid ethers contract
-  const partyBuy = await getPartyBuyContractFromEventLogs(
+  const party = await getPartyBuyContractFromEventLogs(
     provider,
     factory,
     artistSigner,
@@ -74,7 +74,7 @@ async function deployTestContractSetup(
 
   return {
     nftContract,
-    partyBuy,
+    party,
     partyDAOMultisig,
     weth,
     allowList,
@@ -91,20 +91,20 @@ async function getPartyBuyContractFromEventLogs(
   const logs = await provider.getLogs({ address: factory.address });
 
   // parse events from logs
-  const PartyBuyFactory = await ethers.getContractFactory('PartyBuyFactory');
-  const events = logs.map((log) => PartyBuyFactory.interface.parseLog(log));
+  const CollectionPartyFactory = await ethers.getContractFactory('CollectionPartyFactory');
+  const events = logs.map((log) => CollectionPartyFactory.interface.parseLog(log));
 
   // extract proxy address from PartyBuyDeployed log
   const proxyAddress = events[0]['args'][0];
 
   // instantiate ethers contract with PartyBid Logic interface + proxy address
-  const PartyBuy = await ethers.getContractFactory('PartyBuy');
-  const partyBuy = new ethers.Contract(
+  const CollectionParty = await ethers.getContractFactory('CollectionParty');
+  const party = new ethers.Contract(
     proxyAddress,
-    PartyBuy.interface,
+    CollectionParty.interface,
     artistSigner,
   );
-  return partyBuy;
+  return party;
 }
 
 module.exports = {

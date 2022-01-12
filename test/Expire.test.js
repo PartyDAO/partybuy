@@ -28,7 +28,7 @@ describe('Expire', async () => {
         amountSpent,
       } = testCase;
       // instantiate test vars
-      let partyBuy,
+      let party,
         nftContract,
         sellerContract,
         signer;
@@ -49,14 +49,14 @@ describe('Expire', async () => {
           tokenId,
         );
 
-        partyBuy = contracts.partyBuy;
+        party = contracts.party;
         nftContract = contracts.nftContract;
 
         // submit contributions
         for (let contribution of contributions) {
           const { signerIndex, amount } = contribution;
           const signer = signers[signerIndex];
-          await contribute(partyBuy, signer, eth(amount));
+          await contribute(party, signer, eth(amount));
         }
 
         // deploy Seller contract & transfer NFT to Seller
@@ -65,21 +65,21 @@ describe('Expire', async () => {
       });
 
       it('Is ACTIVE before Expire', async () => {
-        const partyStatus = await partyBuy.partyStatus();
+        const partyStatus = await party.partyStatus();
         expect(partyStatus).to.equal(PARTY_STATUS.ACTIVE);
       });
 
       it('Does not allow getClaimAmounts before Expire', async () => {
-        await expect(partyBuy.getClaimAmounts(signers[0].address)).to.be.revertedWith("Party::getClaimAmounts: party still active; amounts undetermined");
+        await expect(party.getClaimAmounts(signers[0].address)).to.be.revertedWith("Party::getClaimAmounts: party still active; amounts undetermined");
       });
 
       it('Does not allow totalEthUsed before Expire', async () => {
-        await expect(partyBuy.totalEthUsed(signers[0].address)).to.be.revertedWith("Party::totalEthUsed: party still active; amounts undetermined");
+        await expect(party.totalEthUsed(signers[0].address)).to.be.revertedWith("Party::totalEthUsed: party still active; amounts undetermined");
       });
 
       it('Does not allow Expire before party has timed out', async () => {
         // buy NFT
-        await expect(partyBuy.expire()).to.be.revertedWith("PartyBuy::expire: party has not timed out");
+        await expect(party.expire()).to.be.revertedWith("PartyBuy::expire: party has not timed out");
       });
 
       it('Expires after Party is timed out', async () => {
@@ -89,45 +89,45 @@ describe('Expire', async () => {
         ]);
         await provider.send('evm_mine');
         // expire party
-        await expect(partyBuy.expire()).to.emit(partyBuy, 'Expired');
+        await expect(party.expire()).to.emit(party, 'Expired');
       });
 
       it(`Doesn't accept contributions after Expire`, async () => {
-        await expect(contribute(partyBuy, signers[0], eth(0.00001))).to.be.reverted;
+        await expect(contribute(party, signers[0], eth(0.00001))).to.be.reverted;
       });
 
       it(`Doesn't allow Buy after Expire`, async () => {
         // encode data to buy NFT
         const data = encodeData(sellerContract, 'sell', [eth(amountSpent), tokenId, nftContract.address]);
         // buy NFT
-        await expect(partyBuy.buy(tokenId, eth(amountSpent), sellerContract.address, data)).to.be.revertedWith("PartyBuy::buy: party not active");
+        await expect(party.buy(tokenId, eth(amountSpent), sellerContract.address, data)).to.be.revertedWith("PartyBuy::buy: party not active");
       });
 
       it(`Doesn't allow Expire after initial Expire`, async () => {
-        await expect(partyBuy.expire()).to.be.revertedWith("PartyBuy::expire: party not active");
+        await expect(party.expire()).to.be.revertedWith("PartyBuy::expire: party not active");
       });
 
       it('Does allow getClaimAmounts before Expire', async () => {
-        await expect(partyBuy.getClaimAmounts(signers[0].address)).to.not.be.reverted;
+        await expect(party.getClaimAmounts(signers[0].address)).to.not.be.reverted;
       });
 
       it('Does allow totalEthUsed before Expire', async () => {
-        await expect(partyBuy.totalEthUsed(signers[0].address)).to.not.be.reverted;
+        await expect(party.totalEthUsed(signers[0].address)).to.not.be.reverted;
       });
 
       it(`Is LOST after Expire`, async () => {
-        const partyStatus = await partyBuy.partyStatus();
+        const partyStatus = await party.partyStatus();
         expect(partyStatus).to.equal(PARTY_STATUS.LOST);
       });
 
       it('totalSpent is 0', async () => {
-        const totalSpent = await partyBuy.totalSpent();
+        const totalSpent = await party.totalSpent();
         expect(weiToEth(totalSpent)).to.equal(0);
       });
 
       it('ETH balance is equal to totalContributed', async () => {
-        const totalContributed = await partyBuy.totalContributedToParty();
-        const ethBalance = await provider.getBalance(partyBuy.address);
+        const totalContributed = await party.totalContributedToParty();
+        const ethBalance = await provider.getBalance(party.address);
         expect(ethBalance).to.equal(totalContributed);
       });
     });

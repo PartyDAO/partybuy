@@ -17,7 +17,7 @@ import {Party} from "./Party.sol";
 import {Structs} from "./Structs.sol";
 import {IAllowList} from "./IAllowList.sol";
 
-contract PartyBuy is Party {
+contract CollectionParty is Party {
     // partyStatus Transitions:
     //   (1) PartyStatus.ACTIVE on deploy
     //   (2) PartyStatus.WON after successful buy()
@@ -25,8 +25,8 @@ contract PartyBuy is Party {
 
     // ============ Internal Constants ============
 
-    // PartyBuy version 2
-    uint16 public constant VERSION = 2;
+    // Collection Party version 1
+    uint16 public constant VERSION = 1;
 
     // ============ Immutables ============
 
@@ -37,9 +37,10 @@ contract PartyBuy is Party {
     // the timestamp at which the Party is no longer active
     uint256 public expiresAt;
     // the maximum price that the party is willing to
-    // spend on the token
-    // This is not used for collection buys and should be initialized
-    // to zero at deploy time to denote that there is no max price.
+    // spend on an item in the collection.
+    // NOTE: to remove the maximum price cap, set maxPrice to 0.
+    // by default, CollectionParties shouldn't need a maxPrice
+    // because the deciders should already be trusted to buy well-priced items.
     // NOTE: the party can accept *UP TO* 102.5% of maxPrice in total,
     // and will not accept more contributions after this.
     uint256 public maxPrice;
@@ -84,7 +85,8 @@ contract PartyBuy is Party {
         // set PartyBuy-specific state variables
         expiresAt = block.timestamp + _secondsToTimeout;
         maxPrice = _maxPrice;
-        require(_maxPrice + _getEthFee(_maxPrice) >= _maxPrice, "PartyBuy::initialize: Max price can overflow");
+        // attempt to calculate maximum contributions to ensure this value won't overflow later
+        getMaximumContributions();
         // set deciders list
         for (uint256 i = 0; i < _deciders.length; i++) {
             isDecider[_deciders[i]] = true;
