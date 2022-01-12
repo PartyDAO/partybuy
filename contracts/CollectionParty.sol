@@ -27,7 +27,7 @@ contract CollectionParty is Party {
 
     // Collection Party version 1
     uint16 public constant VERSION = 1;
-    uint16 public constant PARTY_TYPE = "Collection";
+    string public constant PARTY_TYPE = "Collection";
 
     // ============ Immutables ============
 
