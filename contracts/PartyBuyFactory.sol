@@ -16,6 +16,7 @@ contract PartyBuyFactory {
         address partyProxy,
         address creator,
         address nftContract,
+        uint256 maxPrice,
         uint256 secondsToTimeout,
         address[] deciders,
         address splitRecipient,
@@ -59,6 +60,7 @@ contract PartyBuyFactory {
 
     function startParty(
         address _nftContract,
+        uint256 _maxPrice,
         uint256 _secondsToTimeout,
         address[] calldata _deciders,
         Structs.AddressAndAmount calldata _split,
@@ -70,6 +72,7 @@ contract PartyBuyFactory {
             abi.encodeWithSelector(
             PartyBuy.initialize.selector,
             _nftContract,
+            _maxPrice,
             _secondsToTimeout,
             _deciders,
             _split,
@@ -91,6 +94,7 @@ contract PartyBuyFactory {
             partyBuyProxy,
             msg.sender,
             _nftContract,
+            _maxPrice,
             _secondsToTimeout,
             _deciders,
             _split.addr,
